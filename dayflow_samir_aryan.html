@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DayFlow — Smart Daily Planner</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#172033;--muted:#697386;--line:#e7e9ef;--accent:#5b5cf0;--accent2:#7c3aed;--good:#16a34a;--danger:#dc2626;--shadow:0 12px 35px rgba(31,41,55,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}button{cursor:pointer;border:0}.app{display:flex;min-height:100vh}
+aside{width:245px;background:#111827;color:#fff;padding:25px 18px;position:fixed;inset:0 auto 0 0}
+.logo{font-size:22px;font-weight:800;padding:8px 10px 28px}.logo span{color:#8b8cf8}
+.nav button{display:block;width:100%;padding:12px 13px;margin:5px 0;border-radius:10px;background:transparent;color:#cbd5e1;text-align:left}
+.nav button.active,.nav button:hover{background:#252d3d;color:#fff}.credit{position:absolute;bottom:22px;left:28px;right:20px;color:#94a3b8;font-size:12px;line-height:1.6}
+main{margin-left:245px;width:calc(100% - 245px);padding:28px 34px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.date{color:var(--muted);font-size:14px}.title{font-size:30px;margin:4px 0;font-weight:800}.actions{display:flex;gap:10px}.btn{padding:11px 16px;border-radius:10px;background:#fff;border:1px solid var(--line);color:var(--text)}.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:1.45fr .85fr;gap:20px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px}.card h2{font-size:17px;margin:0 0 15px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.stat{padding:16px;background:#fafaff;border:1px solid var(--line);border-radius:13px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}
+.task{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--line)}.task:last-child{border-bottom:0}.check{width:20px;height:20px;border:2px solid #cbd5e1;border-radius:6px;background:#fff;flex:none}.check.done{background:var(--accent);border-color:var(--accent);position:relative}.check.done:after{content:"✓";color:white;font-size:13px;position:absolute;left:3px;top:-1px}.task.done .taskname{text-decoration:line-through;color:#9ca3af}.taskname{flex:1;font-weight:600}.tag{font-size:11px;padding:5px 8px;border-radius:20px;background:#eef2ff;color:#4f46e5}.time{font-size:12px;color:var(--muted)}.delete{color:#9ca3af;background:none;font-size:17px}.progress{height:10px;background:#eceef4;border-radius:99px;overflow:hidden}.bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:.3s}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{padding:9px 4px;text-align:center;border:1px solid var(--line);border-radius:9px;font-size:12px}.day.today{background:#eef2ff;border-color:#c7d2fe;color:#4338ca;font-weight:800}.schedule{margin-top:14px}.slot{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}.slot strong{width:60px;font-size:12px;color:var(--muted)}.slot div{flex:1}.slot b{font-size:13px}.slot small{display:block;color:var(--muted);margin-top:3px}
+.add{display:flex;gap:8px;margin-bottom:10px}.add input,.add select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;outline:none}.add button{padding:0 15px;border-radius:10px}
+.focus{background:linear-gradient(135deg,#151a2b,#28204a);color:white}.timer{font-size:48px;font-weight:800;text-align:center;margin:10px 0}.timer-controls{display:flex;justify-content:center;gap:8px}.quote{font-size:14px;line-height:1.6;color:#d8dbea}
+.footer{margin-top:24px;text-align:center;color:#8a93a5;font-size:12px}
+@media(max-width:900px){aside{width:72px}.logo{font-size:0}.logo:after{content:"DF";font-size:20px}.nav button{font-size:0;text-align:center}.nav button:first-letter{font-size:18px}.credit{display:none}main{margin-left:72px;width:calc(100% - 72px);padding:20px}.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:560px){.top{display:block}.actions{margin-top:12px}.stats{grid-template-columns:1fr}.calendar{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="logo">Day<span>Flow</span></div>
+  <div class="nav">
+    <button class="active">◉ &nbsp; Today</button>
+    <button>□ &nbsp; Tasks</button>
+    <button>▣ &nbsp; Calendar</button>
+    <button>◎ &nbsp; Focus</button>
+    <button>↗ &nbsp; Progress</button>
+  </div>
+  <div class="credit">Designed & developed by<br><strong>Samir Aryan</strong><br>Smart Daily Planner</div>
+</aside>
+
+<main>
+  <div class="top">
+    <div><div class="date" id="date"></div><div class="title">Good day 👋</div></div>
+    <div class="actions"><button class="btn" onclick="resetDay()">Reset</button><button class="btn primary" onclick="focusFirst()">Start Focus</button></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="doneCount">0</b><span>Completed today</span></div>
+    <div class="stat"><b id="taskCount">0</b><span>Tasks remaining</span></div>
+    <div class="stat"><b id="percent">0%</b><span>Daily progress</span></div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Today's Tasks</h2>
+      <div class="add">
+        <input id="taskInput" placeholder="Add a task… (e.g. Study Java for 60 min)" onkeydown="if(event.key==='Enter')addTask()">
+        <select id="priority"><option>High</option><option selected>Medium</option><option>Low</option></select>
+        <button class="primary" onclick="addTask()">Add</button>
+      </div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div id="tasks"></div>
+    </section>
+
+    <section class="card">
+      <h2>Smart Daily Plan</h2>
+      <div class="calendar" id="calendar"></div>
+      <div class="schedule">
+        <div class="slot"><strong>08:00</strong><div><b>Deep Work</b><small>Most important task first</small></div></div>
+        <div class="slot"><strong>10:30</strong><div><b>Short Break</b><small>Walk, stretch, hydrate</small></div></div>
+        <div class="slot"><strong>11:00</strong><div><b>Priority Tasks</b><small>Finish high-priority items</small></div></div>
+        <div class="slot"><strong>14:00</strong><div><b>Learning</b><small>Study or skill development</small></div></div>
+        <div class="slot"><strong>17:00</strong><div><b>Review</b><small>Check progress and prepare tomorrow</small></div></div>
+      </div>
+    </section>
+
+    <section class="card focus">
+      <h2>Focus Timer</h2>
+      <div class="quote">Work in a focused block, then take a short break. Keep the plan realistic rather than filling every minute.</div>
+      <div class="timer" id="timer">25:00</div>
+      <div class="timer-controls"><button class="btn" onclick="toggleTimer()" id="timerBtn">Start</button><button class="btn" onclick="resetTimer()">Reset</button></div>
+    </section>
+
+    <section class="card">
+      <h2>Daily Reflection</h2>
+      <textarea id="reflection" placeholder="What went well today? What should improve tomorrow?" style="width:100%;height:105px;border:1px solid var(--line);border-radius:10px;padding:12px;resize:vertical"></textarea>
+      <button class="btn primary" style="margin-top:10px" onclick="saveReflection()">Save Reflection</button>
+      <span id="saved" style="font-size:12px;color:var(--good);margin-left:8px"></span>
+    </section>
+  </div>
+  <div class="footer">DayFlow Smart Daily Planner · Built with purpose · <strong>Samir Aryan</strong></div>
+</main>
+</div>
+
+<script>
+const defaultTasks=[
+ {name:"Plan today's top 3 priorities",p:"High",done:false,time:"15 min"},
+ {name:"Complete focused work session",p:"High",done:false,time:"60 min"},
+ {name:"Learn / study something useful",p:"Medium",done:false,time:"45 min"},
+ {name:"Exercise or take a walk",p:"Medium",done:false,time:"30 min"},
+ {name:"Review the day",p:"Low",done:false,time:"10 min"}
+];
+let tasks=JSON.parse(localStorage.getItem("dayflow_tasks")||"null")||defaultTasks;
+let timer=1500, running=false, interval;
+
+function save(){localStorage.setItem("dayflow_tasks",JSON.stringify(tasks));render();}
+function render(){
+ const el=document.getElementById("tasks"); el.innerHTML="";
+ tasks.forEach((t,i)=>{const row=document.createElement("div");row.className="task "+(t.done?"done":"");
+ row.innerHTML=`<button class="check ${t.done?"done":""}" onclick="toggleTask(${i})"></button><div class="taskname">${escapeHtml(t.name)}</div><span class="tag">${t.p}</span><span class="time">${t.time||""}</span><button class="delete" onclick="deleteTask(${i})">×</button>`;
+ el.appendChild(row)});
+ const done=tasks.filter(t=>t.done).length,total=tasks.length,pct=total?Math.round(done/total*100):0;
+ document.getElementById("doneCount").textContent=done;document.getElementById("taskCount").textContent=total-done;document.getElementById("percent").textContent=pct+"%";document.getElementById("bar").style.width=pct+"%";
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function addTask(){let x=document.getElementById("taskInput"),p=document.getElementById("priority");if(!x.value.trim())return;tasks.push({name:x.value.trim(),p:p.value,done:false,time:""});x.value="";save()}
+function toggleTask(i){tasks[i].done=!tasks[i].done;save()}
+function deleteTask(i){tasks.splice(i,1);save()}
+function resetDay(){if(confirm("Reset today's tasks?")){tasks=defaultTasks.map(x=>({...x}));save()}}
+function focusFirst(){const i=tasks.findIndex(x=>!x.done);if(i>=0){tasks[i].done=true;save();alert("Focus session started. Your first task is marked as the active priority.");}else alert("All tasks are complete — great work!")}
+function updateDate(){document.getElementById("date").textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})}
+function buildCalendar(){let d=new Date(),days=[];for(let i=-2;i<=4;i++){let x=new Date(d);x.setDate(d.getDate()+i);days.push(`<div class="day ${i===0?"today":""}"><b>${x.toLocaleDateString(undefined,{weekday:"short"})}</b><br>${x.getDate()}</div>`)}document.getElementById("calendar").innerHTML=days.join("")}
+function tick(){if(timer<=0){clearInterval(interval);running=false;document.getElementById("timerBtn").textContent="Start";alert("Focus session complete. Take a short break.");return}timer--;showTimer()}
+function showTimer(){let m=Math.floor(timer/60),s=timer%60;document.getElementById("timer").textContent=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`}
+function toggleTimer(){if(running){clearInterval(interval);running=false;document.getElementById("timerBtn").textContent="Start"}else{interval=setInterval(tick,1000);running=true;document.getElementById("timerBtn").textContent="Pause"}}
+function resetTimer(){clearInterval(interval);running=false;timer=1500;showTimer();document.getElementById("timerBtn").textContent="Start"}
+function saveReflection(){localStorage.setItem("dayflow_reflection",document.getElementById("reflection").value);document.getElementById("saved").textContent="Saved ✓";setTimeout(()=>document.getElementById("saved").textContent="",1500)}
+document.getElementById("reflection").value=localStorage.getItem("dayflow_reflection")||"";
+updateDate();buildCalendar();render();showTimer();
+</script>
+</body>
+</html>
